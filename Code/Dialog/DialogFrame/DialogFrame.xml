@@ -1,0 +1,16 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Script file="DialogFrame_Preload.lua" />
+
+    <Script file="Widgets\Label.lua" />
+    <Script file="Widgets\Spacer.lua" />
+    <Script file="Widgets\GossipOptionBase.lua" />
+    <Script file="Widgets\GossipOption.lua" />
+    <Script file="Widgets\GossipQuestOption.lua" />
+    <Script file="Widgets\QuestTitleContainer.lua" />
+    <Script file="Widgets\QuestCategoryLabel.lua" />
+    <Script file="Widgets\QuestObjective.lua" />
+    <Script file="Widgets\QuestReward.lua" />
+
+    <Script file="DialogFrame_UI.lua" />
+    <Script file="DialogFrame.lua" />
+</Ui>

@@ -1,0 +1,73 @@
+local env = select(2, ...)
+local L = env.L
+
+L["ESC"] = "ESC"
+L["GOODBYE"] = GOODBYE
+L["ACCEPT"] = ACCEPT
+L["AUTO_ACCEPT"] = ACCEPT
+L["DECLINE"] = DECLINE
+L["CANCEL"] = CANCEL
+L["CONTINUE"] = CONTINUE
+L["COMPLETE"] = COMPLETE
+L["OBJECTIVES"] = "Objectives"
+L["REWARDS"] = REWARDS
+L["LEARN_SPELL_OBJECTIVE"] = LEARN_SPELL_OBJECTIVE
+L["WIP"] = "Work in Progress"
+
+-- Frames
+L["DIALOG_FRAME"] = "Dialog Frame"
+L["DIALOG_SETTINGS_OPEN"] = "Open Settings"
+L["DIALOG_SETTINGS_MODE"] = "Dialogue Mode"
+
+-- Playback
+L["PLAYBACK_PAUSE_CHARACTERS"] = {
+    "…",
+    "!",
+    "?",
+    ".",
+    ",",
+    ";",
+}
+L["PLAYBACK_SPEED_MODIFIER"] = 1
+
+-- Config
+L["CONFIG_GENERAL"] = "General"
+L["CONFIG_GENERAL_PREFERENCES"] = "Preferences"
+L["CONFIG_GENERAL_PREFERENCES_FONT"] = "Font"
+L["CONFIG_GENERAL_OTHER"] = "Other"
+L["CONFIG_GENERAL_OTHER_RESETBUTTON"] = "Reset All Settings"
+L["CONFIG_GENERAL_OTHER_RESETPROMPT"] = "Are you sure you want to reset all settings?"
+L["CONFIG_GENERAL_OTHER_RESETPROMPT_YES"] = "Confirm"
+L["CONFIG_GENERAL_OTHER_RESETPROMPT_NO"] = "Cancel"
+
+L["CONFIG_DIALOGUE"] = "Dialogue"
+L["CONFIG_DIALOGUE_MODE_CLASSIC"] = "Classic"
+L["CONFIG_DIALOGUE_MODE_IMMERSIVE"] = "Immersive"
+
+L["CONFIG_EFFECTS"] = "Effects"
+L["CONFIG_EFFECTS_HIDEUI"] = "Hide UI"
+L["CONFIG_EFFECTS_CAMERA"] = "Camera Effects"
+L["CONFIG_EFFECTS_CAMERA_NONE"] = "None"
+L["CONFIG_EFFECTS_CAMERA_FULL"] = "Full"
+L["CONFIG_EFFECTS_CAMERA_BALANCED"] = "Balanced"
+L["CONFIG_EFFECTS_CAMERA_CUSTOM"] = "Custom"
+
+L["CONFIG_TTS"] = "Text to Speech"
+L["CONFIG_KEYBINDINGS"] = "Keybindings"
+
+L["CONFIG_APPEARANCE"] = "Appearance"
+L["CONFIG_APPEARANCE_DIALOG"] = "Dialog Frame"
+L["CONFIG_APPEARANCE_DIALOG_FONTSIZE"] = "Font Size"
+L["CONFIG_APPEARANCE_IMMERSIVE"] = "Immersive"
+L["CONFIG_APPEARANCE_IMMERSIVE_FONTSIZE"] = "Chat Bubble Font Size"
+
+L["CONFIG_AUDIO"] = "Audio"
+L["CONFIG_AUDIO_GENERAL"] = "General"
+L["CONFIG_AUDIO_GENERAL_ENABLEGLOBALAUDIO"] = "Enable Sound"
+
+L["CONFIG_ABOUT"] = "About"
+L["CONFIG_ABOUT_CONTRIBUTORS"] = "Contributors"
+L["CONFIG_ABOUT_DEVELOPER"] = "Developer"
+L["CONFIG_ABOUT_DEVELOPER_ADAPTIVEX"] = "AdaptiveX"
+
+-- Contributors

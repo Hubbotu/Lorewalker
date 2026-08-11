@@ -1,0 +1,6 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Script file="ModeHandler.lua"/>
+    <Include file="Classic\Classic.xml"/>
+    <Include file="Story\StoryMode.xml"/>
+    <Include file="Immersive\Immersive.xml"/>
+</Ui>

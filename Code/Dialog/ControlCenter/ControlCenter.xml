@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Script file="ControlCenter_Preload.lua"/>
+    <Script file="ControlCenter_OptionFlags.lua"/>
+    <Script file="ControlCenter_Formatting.lua"/>
+    <Script file="ControlCenter_ContextIcon.lua"/>
+    <Script file="ControlCenter_DataProvider.lua"/>
+    <Script file="ControlCenter_Director.lua"/>
+    <Script file="ControlCenter.lua"/>
+</Ui>

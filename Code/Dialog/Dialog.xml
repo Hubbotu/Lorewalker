@@ -1,0 +1,7 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Include file="Preload.lua"/>
+    <Include file="UIWidgets.lua"/>
+    <Include file="ControlCenter\ControlCenter.xml"/>
+    <Include file="DialogFrame\DialogFrame.xml"/>
+    <Include file="Modes\Modes.xml"/>
+</Ui>

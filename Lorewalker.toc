@@ -1,0 +1,29 @@
+## Interface: 120007, 120100
+## Version: 0.0.1 (Beta 1)
+## Title: Lorewalker
+## Notes: A modern questing experience.
+## Author: AdaptiveX
+## IconTexture: Interface\AddOns\Lorewalker\Art\Icons\Logo-White
+## SavedVariables: LorewalkerDB_Global, LorewalkerDB_Global_Persistent
+## SavedVariablesPerCharacter: LorewalkerDB_Local, LorewalkerDB_Local_Persistent
+## AddonCompartmentFunc: LorewalkerAPI_OpenSettingsUI
+
+
+packages\packages.xml
+
+Fonts.lua
+Preload.lua
+Locales\Locales.xml
+Code\PlayerMovementFrameFader.lua
+Code\SharedUI.lua
+Code\InputUtil.lua
+Code\Tooltip.lua
+Code\StaticPopup.lua
+Code\HideUI.lua
+Code\CameraEffects.lua
+
+Code\Dialog\Dialog.xml
+Code\Settings\Settings.xml
+Code\ControlDispatcher.lua
+
+API.lua
