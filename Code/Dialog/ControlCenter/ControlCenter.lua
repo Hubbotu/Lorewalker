@@ -39,8 +39,8 @@ do --Events
         CallbackRegistry.Trigger("ControlCenter.ShowGossip")
     end
 
-    local function OnHideGossip()
-        CallbackRegistry.Trigger("ControlCenter.HideGossip")
+    local function OnHideGossip(_, interactionIsContinuing)
+        CallbackRegistry.Trigger("ControlCenter.HideGossip", interactionIsContinuing)
     end
 
     local function OnShowQuest()

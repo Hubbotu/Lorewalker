@@ -73,9 +73,9 @@ function ClassicMode.OnShowGossip()
     LWDialogFrame:RefreshEdgeFade()
 end
 
-function ClassicMode.OnHideGossip()
+function ClassicMode.OnHideGossip(_, interactionIsContinuing)
     if not ClassicMode.isActive then return end
-    LWDialogFrame:Close()
+    LWDialogFrame:Close(interactionIsContinuing)
 end
 
 function ClassicMode.OnUpdateGossip()

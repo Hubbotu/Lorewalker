@@ -3,6 +3,7 @@ local L = env.L
 local Config = env.Config
 local Pool = env.modules:Import("packages\\pool")
 local CallbackRegistry = env.modules:Import("packages\\callback-registry")
+local Sound = env.modules:Import("packages\\sound")
 local UIKit = env.modules:Import("packages\\ui-kit")
 local UIAnim = env.modules:Import("packages\\ui-anim")
 local InputUtil = env.modules:Import("@\\InputUtil")
@@ -48,7 +49,7 @@ local QUEST_SELECTION_GROUPS = {
     { group = "QuestSkillReceiveRewards",    list = "RewardListFrame" }
 }
 local DEFAULT_POOL_ELEMENT_TYPE = "Default"
-local MODEL_ZOOM_DISTANCE = 1.25
+local MODEL_ZOOM_DISTANCE = 1
 local MODEL_ZOOM_MAX_DISTANCE = 1.5
 
 
@@ -66,6 +67,12 @@ end
 
 function DialogFrame.RequestAction(action)
     CallbackRegistry.Trigger(DialogFrame.Events.ActionRequested, action)
+
+    if action == DialogFrame.Enum.Action.Cancel then
+        Sound.PlaySound("UI", SOUNDKIT.IG_QUEST_CANCEL)
+    elseif action == DialogFrame.Enum.Action.Continue then
+        Sound.PlaySound("UI", SOUNDKIT.IG_QUEST_LIST_OPEN)
+    end
 end
 
 function DialogFrame.RequestGossipOptionSelection(optionType, optionKey)
@@ -135,6 +142,12 @@ function DialogFrameMixin:OnLoad()
         self:OpenSettingsMenu()
     end)
 
+    self.HitRect:AddOnMouseUp(function(button)
+        if button == "RightButton" and Config.DBGlobal:GetVariable("RightClickToClose") then
+            self:CloseSession()
+        end
+    end)
+
     CallbackRegistry.Add(DialogFrame.Events.OpenRequested, function() self:Open() end)
     CallbackRegistry.Add(DialogFrame.Events.CloseRequested, function() self:Close() end)
 
@@ -173,25 +186,24 @@ function DialogFrameMixin:OnLoad()
 
     self.Selection:Hide()
     self:SetDialogGlyphVisibility(false)
-    self:Close()
+    self:Close(true)
 
     DialogFrame_Preload:SetBackground(self.ContentFrame.BackgroundTexture)
     PlayerMovementFrameFader.AddDeferredFrame(self.ContainerFrame, 0.5, 1, 0.5, function() return not self:IsMouseOver() end)
 end
 
-function DialogFrameMixin:SetDialogGlyphVisibility(visibility)
-    self.DialogGlyph:SetShown(visibility)
+function DialogFrameMixin:SetDialogGlyphVisibility(dialogVisibility, questVisibility)
+    self.DialogGlyph:SetShown(dialogVisibility)
+    self.QuestFrame.DialogGlyph:SetShown(questVisibility)
 end
 
 function DialogFrameMixin:UpdateDialogGlyph()
-    local hasContent = nil
-    if ControlCenter.GetGossipSessionType() then
-        hasContent = self.GossipFrame.GossipText:IsShown() or self.GossipFrame.GossipAvailableQuests:IsShown() or self.GossipFrame.GossipActiveQuests:IsShown() or self.GossipFrame.GossipOptions:IsShown()
-    elseif ControlCenter.GetQuestSessionType() then
-        hasContent = self.QuestFrame.QuestTitleContainer.TitleText:IsShown() or self.QuestFrame.QuestTitleContainer.CampaignText:IsShown() or self.QuestFrame.QuestText:IsShown() or self.QuestFrame.QuestObjectivesHeader:IsShown() or self.QuestFrame.QuestRewardsHeader:IsShown()
-    end
+    local isGossip = ControlCenter.GetGossipSessionType()
+    local hasGossipContent = self.GossipFrame.GossipText:IsShown() or self.GossipFrame.GossipAvailableQuests:IsShown() or self.GossipFrame.GossipActiveQuests:IsShown() or self.GossipFrame.GossipOptions:IsShown()
+    local isQuest = ControlCenter.GetQuestSessionType()
+    local hasQuestContent = self.QuestFrame.QuestText:IsShown() or self.QuestFrame.QuestObjectivesHeader:IsShown() or self.QuestFrame.QuestSpellObjectiveHeader:IsShown() or self.QuestFrame.QuestRewardsHeader:IsShown()
 
-    self:SetDialogGlyphVisibility(not hasContent)
+    self:SetDialogGlyphVisibility(isGossip and not hasGossipContent, isQuest and not self.showDefaultText and not hasQuestContent)
 end
 
 function DialogFrameMixin:SetSelectableGroupData(group, data)
@@ -438,9 +450,15 @@ function DialogFrameMixin:StopResizing()
 end
 
 function DialogFrameMixin:Open()
+    local wasShown = self:IsShown()
+
     self:Show()
     self.AnimGroup:Play(self, "INSTANT")
     self.AnimGroup:Play(self, "CONTENT_INTRO")
+
+    if not wasShown then
+        Sound.PlaySound("UI", SOUNDKIT.IG_QUEST_LIST_OPEN)
+    end
 
     self:UpdateTitle()
     self:UpdateBackground()
@@ -451,11 +469,18 @@ function DialogFrameMixin:Open()
     CallbackRegistry.Trigger("DialogFrame.Open")
 end
 
-function DialogFrameMixin:Close()
+function DialogFrameMixin:Close(suppressSound)
+    local wasShown = self:IsShown()
+
     self:ResetGossipSelection()
     self:ResetQuestSelection()
     self:SetDialogGlyphVisibility(false)
     self:Hide()
+
+    if wasShown and not suppressSound then
+        Sound.PlaySound("UI", SOUNDKIT.IG_QUEST_LIST_CLOSE)
+    end
+
     CallbackRegistry.Trigger("DialogFrame.Close")
 end
 

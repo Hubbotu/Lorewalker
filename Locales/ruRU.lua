@@ -1,8 +1,10 @@
+-- ♡ Contributors: ZamestoTV (Hubbotu)
+
 if GetLocale() ~= "ruRU" then return end
 
 local env = select(2, ...)
 local L = env.L
--- Translator ZamestoTV
+
 L["ESC"] = "ESC"
 L["GOODBYE"] = GOODBYE
 L["ACCEPT"] = ACCEPT
@@ -45,6 +47,11 @@ L["CONFIG_GENERAL_OTHER_RESETPROMPT_NO"] = "Отмена"
 L["CONFIG_DIALOGUE"] = "Диалоги"
 L["CONFIG_DIALOGUE_MODE_CLASSIC"] = "Классический"
 L["CONFIG_DIALOGUE_MODE_IMMERSIVE"] = "Погружение"
+L["CONFIG_DIALOGUE_FRAME"] = "Dialog Frame"
+L["CONFIG_DIALOGUE_THEME"] = "Theme"
+L["CONFIG_DIALOGUE_THEME_LIGHT"] = "Light"
+L["CONFIG_DIALOGUE_THEME_DARK"] = "Dark"
+L["CONFIG_DIALOGUE_RIGHTCLICKTOCLOSE"] = "Right-Click To Close"
 
 L["CONFIG_EFFECTS"] = "Эффекты"
 L["CONFIG_EFFECTS_HIDEUI"] = "Скрывать интерфейс"

@@ -2,6 +2,7 @@ local env = select(2, ...)
 local L = env.L
 local Enum = env.Enum
 local Config = env.Config
+local Sound = env.modules:Import("packages\\sound")
 local CallbackRegistry = env.modules:Import("packages\\callback-registry")
 local UIAnim = env.modules:Import("packages\\ui-anim")
 local Utils_Blizzard = env.modules:Import("packages\\utils\\blizzard")
@@ -10,7 +11,7 @@ local ControlCenter = env.modules:Import("@\\Dialog\\ControlCenter")
 local DialogFrame = env.modules:Import("@\\Dialog\\DialogFrame")
 local Modes_ModeHandler = env.modules:Import("@\\Dialog\\Modes\\ModeHandler")
 local ImmersiveMode_Preload = env.modules:Import("@\\Dialog\\Modes\\Immersive\\Preload")
-local ImmersiveMode_CVars = env.modules:Import("@\\Dialog\\Modes\\Immersive\\CVars")
+local Dialog_CVars = env.modules:Import("@\\Dialog\\CVars")
 local ImmersiveMode = env.modules:New("@\\Dialog\\Modes\\Immersive")
 
 local UIParent = UIParent
@@ -227,7 +228,7 @@ function ImmersiveMode.Activate()
     LWDialogFrame:SetDefaultTextShown(false)
 
     if ControlCenter.IsInSession() then
-        ImmersiveMode_CVars.Activate()
+        Dialog_CVars.Activate(Dialog_CVars.Profiles.ImmersiveMode)
     end
 
     if ControlCenter.GetGossipSessionType() then
@@ -242,7 +243,7 @@ end
 
 function ImmersiveMode.Deactivate()
     ImmersiveMode.isActive = false
-    ImmersiveMode_CVars.Deactivate()
+    Dialog_CVars.Deactivate(Dialog_CVars.Profiles.ImmersiveMode)
     LWDialogFrame:Close()
     LWImmersiveChatBubble:RestoreNameplate()
     LWImmersiveChatBubble:Close()
@@ -255,7 +256,7 @@ end
 
 function ImmersiveMode.OnSessionBegin()
     if not ImmersiveMode.isActive then return end
-    ImmersiveMode_CVars.Activate()
+    Dialog_CVars.Activate(Dialog_CVars.Profiles.ImmersiveMode)
 end
 
 function ImmersiveMode.OnSessionClosing()
@@ -265,7 +266,7 @@ end
 
 function ImmersiveMode.OnSessionEnd()
     if not ImmersiveMode.isActive then return end
-    ImmersiveMode_CVars.Deactivate()
+    Dialog_CVars.Deactivate(Dialog_CVars.Profiles.ImmersiveMode)
     LWImmersiveChatBubble:CloseImmediately()
     LWImmersiveChatBubble:RestoreNameplate()
     LWDialogFrame:HideQuestModelFrame()
@@ -274,7 +275,7 @@ end
 
 function ImmersiveMode.OnCombatBegin()
     if not ImmersiveMode.isActive then return end
-    ImmersiveMode_CVars.Deactivate()
+    Dialog_CVars.Deactivate(Dialog_CVars.Profiles.ImmersiveMode)
 end
 
 function ImmersiveMode.OnShowGossip()
@@ -289,10 +290,10 @@ function ImmersiveMode.OnShowGossip()
     LWDialogFrame:RefreshEdgeFade()
 end
 
-function ImmersiveMode.OnHideGossip()
+function ImmersiveMode.OnHideGossip(_, interactionIsContinuing)
     if not ImmersiveMode.isActive then return end
     LWImmersiveChatBubble:Close()
-    LWDialogFrame:Close()
+    LWDialogFrame:Close(interactionIsContinuing)
 end
 
 function ImmersiveMode.OnUpdateGossip()
@@ -380,14 +381,14 @@ function ChatBubbleMixin:OnLoad()
     self.isMouseOver = false
     self.isDragging = false
 
-    self.ProgressFrame:Hide()
+    self.ReplayFrame.ReplayButton:HookClick(function() self:ReplayDialog() end)
+    self:SetReplayFrameShown(false)
+
     self.ProgressFrame.PreviousButton:HookClick(function() self:PreviousDialog() end)
     self.ProgressFrame.NextButton:HookClick(function() self:NextDialog() end)
 
     self:SetScript("OnEnter", self.OnEnter)
     self:SetScript("OnLeave", self.OnLeave)
-    self:SetScript("OnMouseDown", self.OnMouseDown)
-    self:SetScript("OnMouseUp", self.OnMouseUp)
     self:SetScript("OnUpdate", self.OnUpdate)
     self:SetScript("OnDragStart", function()
         if self.isNameplateAnchored then return end
@@ -436,7 +437,7 @@ function ChatBubbleMixin:OnUpdate(elapsed)
     local isValidNameplate = self:IsValidNameplate(nameplate)
 
     if self.isNameplateAnchored ~= isValidNameplate or (isValidNameplate and self.nameplate ~= nameplate) then
-        self:SetNameplate(unit)
+        if self:SetNameplate(unit) then self:Open() end
     end
 
     self:OnTextPlaybackUpdate(elapsed)
@@ -461,9 +462,9 @@ function ChatBubbleMixin:UpdateChatBubble(restartDialog)
     end
     if self.isFinished and not restartDialog then return end
 
-    self:SetNameplate(ImmersiveModeUtil.GetInteractionUnit())
+    local nameplateModeChanged = self:SetNameplate(ImmersiveModeUtil.GetInteractionUnit())
 
-    if restartDialog or not wasShown then
+    if restartDialog or not wasShown or nameplateModeChanged then
         self:Open()
     elseif messageChanged then
         self.AnimGroup:Stop()
@@ -492,9 +493,17 @@ function ChatBubbleMixin:SkipDialog()
     return self:SkipMessage()
 end
 
+function ChatBubbleMixin:ReplayDialog()
+    if not self.isFinished or not self:IsPreviousDialogEnabled() then return false end
+    self:UpdateChatBubble(true)
+    return true
+end
+
 function ChatBubbleMixin:HandleDialogProgression(button)
     if button == "LeftButton" then
-        self:NextDialog()
+        if self:NextDialog() then
+            Sound.PlaySound("UI", SOUNDKIT.SCROLLBAR_STEP or SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+        end
     elseif button == "RightButton" then
         self:PreviousDialog()
     end
@@ -519,12 +528,36 @@ function ChatBubbleMixin:SetAppearance(appearanceID)
 end
 
 function ChatBubbleMixin:SetTail(showTail)
-    self.Tail:SetShown(showTail)
+    self.Tail:SetShown(showTail and self.isNameplateAnchored)
     self.allowTail = showTail
 end
 
 function ChatBubbleMixin:HasMessage()
     return self.messages and self.messages[1] ~= nil
+end
+
+function ChatBubbleMixin:UpdateChatBubbleSize()
+    local textWidth = self.String:GetStringWidth()
+    local textHeight = self.String:GetStringHeight()
+
+    self:SetSize(min(textWidth + self.padding, self.maxWidth), textHeight + self.padding)
+end
+
+function ChatBubbleMixin:SetReplayFrameShown(shown)
+    self.ReplayFrame:SetShown(shown)
+    self.ContainerFrame:SetShown(not shown)
+
+    if shown then
+        self:SetSize(self.ReplayFrame:GetSize())
+        self:SetScript("OnMouseDown", nil)
+        self:SetScript("OnMouseUp", nil)
+        self.ProgressFrame:Hide()
+    else
+        if self.currentMessageText then self:UpdateChatBubbleSize() end
+        self:SetScript("OnMouseDown", self.OnMouseDown)
+        self:SetScript("OnMouseUp", self.OnMouseUp)
+        self:UpdateProgressFrame()
+    end
 end
 
 function ChatBubbleMixin:UpdateProgressFrame()
@@ -574,6 +607,7 @@ function ChatBubbleMixin:RestoreNameplate()
         self.nameplate:SetAlpha(self.nameplateAlpha)
     end
 
+    self.Tail:Hide()
     self.isNameplateAnchored = false
     self.nameplate = nil
     self.nameplateAlpha = nil
@@ -581,6 +615,7 @@ end
 
 function ChatBubbleMixin:SetNameplate(unit)
     local nameplate = GetNamePlateForUnit(unit)
+    local nameplateModeChanged = self.isNameplateAnchored ~= self:IsValidNameplate(nameplate)
     if not self:IsValidNameplate(nameplate) then
         self:RestoreNameplate()
         self:SetParent(LWParent)
@@ -588,8 +623,7 @@ function ChatBubbleMixin:SetNameplate(unit)
         self:ClearAllPoints()
         self:RestorePosition()
         self:SetMovable(true)
-        if self.allowTail then self.Tail:Hide() end
-        return
+        return nameplateModeChanged
     end
 
     if self.nameplate ~= nameplate then
@@ -606,6 +640,8 @@ function ChatBubbleMixin:SetNameplate(unit)
     self:ClearAllPoints()
     self:SetPoint("BOTTOM", nameplate, 0, 6)
     self:SetMovable(false)
+
+    return nameplateModeChanged
 end
 
 function ChatBubbleMixin:IsPlaybackEnabled()
@@ -756,11 +792,7 @@ function ChatBubbleMixin:SetMessageToIndex(index, skipPlayback, shouldAutoProgre
     self.String:SetText(message.text)
     self:SetAppearance(message.appearance)
 
-    local textWidth = self.String:GetStringWidth()
-    local textHeight = self.String:GetStringHeight()
-
-    self:SetSize(min(textWidth + self.padding, self.maxWidth), textHeight + self.padding)
-    self:UpdateProgressFrame()
+    self:SetReplayFrameShown(false)
 
     if playbackEnabled and not skipPlayback then
         self:StartTextPlayback(message.text, shouldAutoProgress)
@@ -782,7 +814,7 @@ function ChatBubbleMixin:SetMessage(msg, restartDialog)
         self:CancelAutoProgress()
         self:StopTextPlayback()
         self:SetAppearance(nil)
-        self:UpdateProgressFrame()
+        self:SetReplayFrameShown(false)
         return false
     end
 
@@ -839,11 +871,12 @@ function ChatBubbleMixin:ShowNextMessage(continueAutoProgress)
         self.isFinished = true
         self:CancelAutoProgress()
         self:StopTextPlayback(true)
-        self:Close()
 
         local autoClose = Config.DBGlobal:GetVariable("Immersive_PlaybackAutoClose")
         if self:IsPlaybackEnabled() and autoClose and ControlCenter.GetGossipSessionType() and not ImmersiveModeUtil.HasGossipOptions() then
             CloseSession()
+        else
+            self:Open()
         end
 
         return true
@@ -867,7 +900,8 @@ end
 function ChatBubbleMixin:Open()
     self:Show()
     self.AnimGroup:Stop()
-    self.AnimGroup:Play(self, "SHOW")
+    self:SetReplayFrameShown(self.isFinished)
+    self.AnimGroup:Play(self, self.isFinished and "REPLAY" or "SHOW")
 end
 
 function ChatBubbleMixin:Close()
@@ -928,6 +962,13 @@ do
         if frame.appearance ~= ImmersiveMode_Preload.Enum.Appearance.Emote then
             ScaleOut:Play(frame.ContainerFrame)
         end
+    end)
+
+    local ReplayFadeIn = UIAnim.Animate():property(UIAnim.Enum.Property.Alpha):duration(0.25):from(0):to(1)
+    local ReplayScaleIn = UIAnim.Animate():property(UIAnim.Enum.Property.Scale):easing(UIAnim.Enum.Easing.ExpoOut):duration(0.75):from(1.5):to(1)
+    ChatBubbleMixin.AnimGroup:State("REPLAY", function(frame)
+        ReplayFadeIn:Play(frame)
+        ReplayScaleIn:Play(frame.ReplayFrame.ReplayButton)
     end)
 end
 

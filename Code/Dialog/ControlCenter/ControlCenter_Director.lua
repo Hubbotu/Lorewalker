@@ -7,21 +7,18 @@ local ControlCenter_Preload = env.modules:Import("@\\Dialog\\ControlCenter\\Prel
 local ControlCenter_DataProvider = env.modules:Import("@\\Dialog\\ControlCenter\\DataProvider")
 local ControlCenter_Director = env.modules:New("@\\Dialog\\ControlCenter\\Director")
 
-local function Noop() end
 local function False() return false end
 
 local CreateFrame = CreateFrame
-local ForceGossip = C_GossipInfo.ForceGossip or False
-local ClearInteraction = (C_PlayerInteractionManager and C_PlayerInteractionManager.ClearInteraction) or Noop
+local ForceGossip = C_GossipInfo.ForceGossip
+local ClearInteraction = C_PlayerInteractionManager.ClearInteraction
 local GetActiveQuests = C_GossipInfo.GetActiveQuests
 local GetAvailableQuests = C_GossipInfo.GetAvailableQuests
 local GetGossipOptions = C_GossipInfo.GetOptions
 local GetNumActiveQuests = C_GossipInfo.GetNumActiveQuests
 local GetNumAvailableQuests = C_GossipInfo.GetNumAvailableQuests
-local GetQuestID = GetQuestID
 local QuestIsFromAreaTrigger = QuestIsFromAreaTrigger or False
 local QuestGetAutoAccept = QuestGetAutoAccept or False
-local RequestLoadQuestByID = C_QuestLog.RequestLoadQuestByID
 local SelectOptionByIndex = C_GossipInfo.SelectOptionByIndex
 local ipairs = ipairs
 
@@ -53,7 +50,6 @@ local EVENTS = {
 }
 if WoWClient.IS_RETAIL then
     EVENTS[#EVENTS + 1] = "GOSSIP_OPTIONS_REFRESHED"
-    EVENTS[#EVENTS + 1] = "QUEST_DATA_LOAD_RESULT"
 end
 local CUSTOM_GOSSIP_EVENTS = {
     "GOSSIP_SHOW",
@@ -127,6 +123,8 @@ end
         ControlCenter.SessionBegin
         ControlCenter.SessionClosing
         ControlCenter.SessionEnd
+        ControlCenter.CinematicBegin
+        ControlCenter.CinematicEnd
         ControlCenter.CombatBegin
         ControlCenter.CombatEnd
         ControlCenter.Update
@@ -151,8 +149,6 @@ do
     local isSessionActive = false
     local isContinuingNPCInteraction = false
     local isGreeting = false
-    local lastLoadedQuestID = nil
-    local pendingQuestEventName = false
     local sessionEndDelay = 0
     local scanFinalInteraction = false
 
@@ -202,8 +198,6 @@ do
         isSessionActive = false
         isContinuingNPCInteraction = false
         isGreeting = false
-        lastLoadedQuestID = nil
-        pendingQuestEventName = false
         sessionEndDelay = 0
         scanFinalInteraction = false
 
@@ -283,15 +277,8 @@ do
         return interactionType == Enum.PlayerInteractionType.Gossip or interactionType == Enum.PlayerInteractionType.QuestGiver
     end
 
-    local function BeginQuestSession(event)
+    local function BeginQuestSession()
         if QuestIsFromAreaTrigger() and QuestGetAutoAccept() then
-            return
-        end
-
-        local questID = GetQuestID()
-        if RequestLoadQuestByID and questID > 0 and lastLoadedQuestID ~= questID then
-            pendingQuestEventName = event
-            RequestLoadQuestByID(questID)
             return
         end
 
@@ -302,7 +289,7 @@ do
         isSessionActive = true
 
         if QUEST_SESSION_TYPE_LOOKUP[event] then
-            BeginQuestSession(event)
+            BeginQuestSession()
             return
         end
 
@@ -310,32 +297,12 @@ do
             return
         end
 
-        lastLoadedQuestID = nil
-        pendingQuestEventName = false
         EventListener:BeginSession()
     end
 
     local function OnSessionEnd()
         isSessionActive = false
         SessionTimer:Start(sessionEndDelay)
-    end
-
-    local function OnQuestDataLoad(questID)
-        lastLoadedQuestID = questID
-
-        if not pendingQuestEventName then
-            return
-        end
-
-        local delayedEvent = pendingQuestEventName
-        pendingQuestEventName = false
-
-        OnSessionBegin(delayedEvent)
-        if ControlCenter_Director.isInSession then
-            ProcessQuestEvent(delayedEvent)
-            UpdateSessionEndDelay()
-            RelayEvent(delayedEvent)
-        end
     end
 
     function EventListener:BeginSession()
@@ -402,14 +369,6 @@ do
             return
         end
 
-        if event == "QUEST_DATA_LOAD_RESULT" then
-            local questID, success = ...
-            if success ~= false then
-                OnQuestDataLoad(questID)
-            end
-            return
-        end
-
         if event == "QUEST_GREETING" then
             isGreeting = true
         end
@@ -432,14 +391,31 @@ do
 
     local f = CreateFrame("Frame")
     f:RegisterEvent("CINEMATIC_START")
+    f:RegisterEvent("CINEMATIC_STOP")
     f:RegisterEvent("PLAY_MOVIE")
+    f:RegisterEvent("STOP_MOVIE")
     f:RegisterEvent("PLAYER_REGEN_DISABLED")
     f:RegisterEvent("PLAYER_REGEN_ENABLED")
     f:RegisterEvent("QUEST_LOG_UPDATE")
     f:RegisterEvent("QUEST_ITEM_UPDATE")
+    f:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
     f:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
     f:SetScript("OnEvent", function(self, event, ...)
+        if event == "CINEMATIC_STOP" or event == "STOP_MOVIE" then
+            CallbackRegistry.Trigger("ControlCenter.CinematicEnd")
+            return
+        end
+
         if not ControlCenter_Director.isInSession then
+            return
+        end
+
+        if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
+            local interactionType = ...
+            if not IsDialogInteractionType(interactionType) then
+                CallbackRegistry.Trigger("ControlCenter.SessionClosing")
+                EventListener:EndSession()
+            end
             return
         end
 
@@ -453,7 +429,9 @@ do
         end
 
         if event == "CINEMATIC_START" or event == "PLAY_MOVIE" then
+            CallbackRegistry.Trigger("ControlCenter.CinematicBegin")
             EventListener:EndSession()
+            return
         end
 
         if event == "PLAYER_REGEN_DISABLED" then
@@ -462,8 +440,10 @@ do
             CallbackRegistry.Trigger("ControlCenter.CombatEnd")
         end
 
-        if event == "QUEST_LOG_UPDATE" or event == "QUEST_ITEM_UPDATE" then
+        if event == "QUEST_LOG_UPDATE" then
             UpdateTimer:Start(0)
+        elseif event == "QUEST_ITEM_UPDATE" then
+            CallbackRegistry.Trigger("ControlCenter.Update")
         end
     end)
 end

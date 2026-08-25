@@ -20,7 +20,9 @@ local function Nil() return nil end
 local Mixin = Mixin
 local CreateFromMixins = CreateFromMixins
 local AbbreviateNumbers = AbbreviateNumbers
-local GetFactionGrantedByCurrency = (C_CurrencyInfo and C_CurrencyInfo.GetFactionGrantedByCurrency) or Nil
+local Item = Item
+local GetQuestItemInfo = GetQuestItemInfo
+local GetFactionGrantedByCurrency = C_CurrencyInfo.GetFactionGrantedByCurrency or Nil
 local FIRST_COMPLETION_BONUS = Enum.QuestRewardContextFlags and Enum.QuestRewardContextFlags.FirstCompletionBonus
 local REPEAT_COMPLETION_BONUS = Enum.QuestRewardContextFlags and Enum.QuestRewardContextFlags.RepeatCompletionBonus
 
@@ -129,6 +131,31 @@ local function ApplyRewardDisplay(frame, rewardInfo, optionIndex)
     frame.Label:SetText(name)
 end
 
+local function ContinueOnItemLoad(frame, rewardInfo, optionIndex)
+    if frame.rewardButtonType ~= DialogFrame_Preload.Enum.RewardButtonType.Item or not Item or not rewardInfo.rewardID then return end
+
+    local itemID = rewardInfo.rewardID
+    local item = Item:CreateFromItemID(itemID)
+    if not item then return end
+
+    item:ContinueOnItemLoad(function()
+        if frame.rewardInfo ~= rewardInfo or rewardInfo.rewardID ~= itemID then return end
+
+        local name, texture, count, quality, isUsable, currentItemID, flags = GetQuestItemInfo(rewardInfo.questRewardType, rewardInfo.questRewardIndex)
+        if currentItemID ~= itemID then return end
+
+        rewardInfo.name = name
+        rewardInfo.texture = texture
+        rewardInfo.count = count
+        rewardInfo.quality = quality
+        rewardInfo.isUsable = isUsable
+        rewardInfo.questRewardContextFlags = flags
+
+        frame:RewardButton_SetReward(rewardInfo)
+        ApplyRewardDisplay(frame, rewardInfo, optionIndex)
+    end)
+end
+
 
 local RewardButtonBaseMixin = CreateFromMixins(UICSharedMixin.ButtonMixin)
 
@@ -234,6 +261,7 @@ do -- Reward Button
     function RewardButtonMixin:SetReward(rewardInfo)
         self:RewardButton_SetReward(rewardInfo)
         ApplyRewardDisplay(self, rewardInfo)
+        ContinueOnItemLoad(self, rewardInfo)
     end
 
     function RewardButtonMixin:UpdateAnimation()
@@ -392,6 +420,7 @@ do -- Choice Reward Button
         self.rewardIndex = itemInfo.questRewardIndex
         self:RewardButton_SetReward(itemInfo)
         ApplyRewardDisplay(self, itemInfo, optionIndex)
+        ContinueOnItemLoad(self, itemInfo, optionIndex)
     end
 
     function ChoiceRewardButtonMixin:UpdateAnimation()

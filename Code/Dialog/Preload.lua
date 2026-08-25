@@ -7,7 +7,7 @@ local Dialog_Preload = env.modules:New("@\\Dialog\\Preload")
 local EDIT_MODE_ATLAS = UIKit.Define.Texture_Atlas{ path = Path.Root .. "\\Art\\EditMode\\EditMode" }
 Dialog_Preload.UIDEF = {
     Selection          = EDIT_MODE_ATLAS{ inset = 7, left = 0 / 16, right = 16 / 16, top = 0 / 16, bottom = 16 / 16 },
-    IMChatBubbleShadow = UIKit.Define.Texture_Atlas{ path = Path.Root .. "\\Art\\Dialog\\ImmersiveMode\\ChatBubbleShadow", inset = 31, left = 0 / 128, right = 128 / 128, top = 0 / 64, bottom = 64 / 64 }
+    IMChatBubbleShadow = UIKit.Define.Texture_Atlas{ path = Path.Root .. "\\Art\\Dialog\\ImmersiveMode\\ChatBubbleShadow", inset = 31, left = 0 / 64, right = 64 / 64, top = 0 / 64, bottom = 64 / 64 }
 }
 
 Dialog_Preload.TextColorSay = React.New(nil)

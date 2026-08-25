@@ -1,5 +1,5 @@
 ## Interface: 20506
-## Version: 0.0.1
+## Version: 0.0.2 (Beta 2)
 ## Title: Lorewalker
 ## Notes: A modern questing experience.
 ## Author: AdaptiveX

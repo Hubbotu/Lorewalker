@@ -2,6 +2,8 @@ local env = select(2, ...)
 local Sound = env.modules:Import("packages\\sound")
 local UICSharedMixin = env.modules:Import("packages\\uic-sharedmixin")
 local InputUtil = env.modules:Import("@\\InputUtil")
+local ControlCenter_Preload = env.modules:Import("@\\Dialog\\ControlCenter\\Preload")
+local ControlCenter = env.modules:Import("@\\Dialog\\ControlCenter")
 local DialogFrame = env.modules:Await("@\\Dialog\\DialogFrame")
 local GossipOptionBase = env.modules:New("@\\Dialog\\DialogFrame\\Widgets\\GossipOptionBase")
 
@@ -73,7 +75,9 @@ do -- Option
     end
 
     function OptionMixin:PlayInteractSound()
-        Sound.PlaySound("UI", SOUNDKIT.IG_QUEST_LIST_OPEN)
+        if ControlCenter.GetGossipSessionType() == ControlCenter_Preload.Enum.SessionType.GossipGreeting then
+            Sound.PlaySound("UI", SOUNDKIT.IG_QUEST_LIST_SELECT)
+        end
     end
 end
 

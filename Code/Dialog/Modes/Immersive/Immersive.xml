@@ -1,6 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <Script file="Immersive_Preload.lua"/>
-    <Script file="Immersive_CVars.lua"/>
     <Script file="Immersive_UI.lua" />
     <Script file="Immersive.lua" />
 </Ui>

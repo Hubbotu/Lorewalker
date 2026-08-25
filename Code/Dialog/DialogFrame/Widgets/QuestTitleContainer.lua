@@ -6,6 +6,10 @@ local DialogFrame_Preload = env.modules:Import("@\\Dialog\\DialogFrame\\Preload"
 local QuestTitleContainer = env.modules:New("@\\Dialog\\DialogFrame\\Widgets\\QuestTitleContainer")
 
 do -- Quest Header
+    local TITLE_ICON_SIZE = 22
+    local TITLE_ICON_SPACING = 6
+    local WARBAND_COMPLETE_SPACING = 30
+    local TITLE_TEXT_WIDTH = UIKit.Define.Percentage{ value = 100, operator = "-", delta = function(frame) return (UIKit.GetElementById("TitleIcon", frame.templateID):IsShown() and TITLE_ICON_SIZE + TITLE_ICON_SPACING or 0) + (frame.isQuestCompleteWarband and WARBAND_COMPLETE_SPACING or 0) end }
     local HEIGHT = UIKit.Define.Fit{ delta = 22 }
 
     local QuestTitleContainerMixin = {}
@@ -52,6 +56,7 @@ do -- Quest Header
         self.ContentSeperator:background(isQuestCompleteWarband and DialogFrame_Preload.UIDEF.UIQuestContentSeperatorWarbandComplete or DialogFrame_Preload.UIDEF.UIQuestContentSeperator)
 
         self.isQuestCompleteWarband = isQuestCompleteWarband
+        self.TitleText.isQuestCompleteWarband = isQuestCompleteWarband
         self.tooltipTitle = tooltipTitle
         self.tooltipBody = tooltipBody
         if hasIcon then self.TitleIcon:background(icon) end
@@ -75,13 +80,13 @@ do -- Quest Header
                     LayoutHorizontal(name .. ".TitleTextContainer", {
                         Frame(name .. ".TitleIcon")
                             :id("TitleIcon", id)
-                            :size(22, 22)
+                            :size(TITLE_ICON_SIZE, TITLE_ICON_SIZE)
                             :background(UIKit.UI.TEXTURE_NIL)
                             :enableMouse(true),
 
                         Text(name .. ".TitleText")
                             :id("TitleText", id)
-                            :size(UIKit.UI.P_FILL, UIKit.UI.FIT)
+                            :size(TITLE_TEXT_WIDTH, UIKit.UI.FIT)
                             :fontObject(UIFont.ParchmentHeaderPrimaryText)
                             :textColor(DialogFrame_Preload.TextColorPrimary)
                             :textJustifyH("LEFT")
@@ -89,7 +94,7 @@ do -- Quest Header
                     })
                         :id("TitleTextContainer", id)
                         :size(UIKit.UI.P_FILL, UIKit.UI.FIT)
-                        :layoutSpacing(6)
+                        :layoutSpacing(TITLE_ICON_SPACING)
                         :layoutAlignmentV(UIKit.Enum.Direction.Justified)
                 })
                     :id("ContainerFrame", id)
@@ -116,6 +121,8 @@ do -- Quest Header
         frame.TitleIcon = UIKit.GetElementById("TitleIcon", id)
         frame.TitleText = UIKit.GetElementById("TitleText", id)
         frame.ContentSeperator = UIKit.GetElementById("ContentSeperator", id)
+
+        frame.TitleText.templateID = id
 
         Mixin(frame, QuestTitleContainerMixin)
         frame:OnLoad()

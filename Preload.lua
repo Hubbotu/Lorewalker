@@ -9,8 +9,8 @@ local Path = env.modules:Import("packages\\path")
 env.NAME = "Lorewalker"
 env.ICON = Path.Root .. "\\Art\\Icons\\Logo"
 env.ICON_ALT = Path.Root .. "\\Art\\Icons\\Logo-White"
-env.VERSION_STRING = "Beta 1"
-env.VERSION_NUMBER = 000001
+env.VERSION_STRING = "Beta 2"
+env.VERSION_NUMBER = 000002
 env.DEBUG_MODE = false
 
 
@@ -19,6 +19,10 @@ local L = {}; env.L = L
 
 local Enum = {}; env.Enum = Enum
 do
+    Enum.Theme = {
+        Light = 1,
+        Dark  = 2
+    }
     Enum.Mode = {
         Classic   = 1,
         Immersive = 2,
@@ -63,7 +67,8 @@ do
         },
         userKeybinds = {},
 
-        ActiveMode = Enum.Mode.Classic,
+        Theme                                              = Enum.Theme.Light,
+        ActiveMode                                         = Enum.Mode.Classic,
 
         DialogFontSizeOffset                               = 1, --100%
         ChatBubbleFontSizeOffset                           = 1, --100%
@@ -82,6 +87,7 @@ do
 
         ForceGossip                           = false,
         EscapeDeclinesQuest                   = false,
+        RightClickToClose                     = true,
         Immersive_SplitParagraphs             = true,
         Immersive_Playback                    = false,
         Immersive_PlaybackSpeed               = 1,

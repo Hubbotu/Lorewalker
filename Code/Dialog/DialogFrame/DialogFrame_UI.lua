@@ -144,6 +144,18 @@ do -- DetailsFrame
     local SCROLL_STEP_SIZE = 58
     local SCROLL_CONTENT_HEIGHT = UIKit.Define.Fit{ delta = SCROLL_BOTTOM_PADDING }
 
+    DialogFrame_UI.DialogGlyph = UIKit.Template(function(id, name, children, ...)
+        local frame =
+            Frame(name)
+            :point(UIKit.Enum.Point.Center)
+            :background(DialogFrame_Preload.UIDEF.DialogGlyph)
+            :backgroundColor(DialogFrame_Preload.TintColor)
+            :size(125, 125)
+            :alpha(0.25)
+
+        return frame
+    end)
+
     DialogFrame_UI.EdgeFade = UIKit.Template(function(id, name, children, ...)
         local frame =
             ScrollContainerEdge(name, {
@@ -314,11 +326,16 @@ do -- DetailsFrame
                     :scrollInterpolation(SCROLL_INTERPOLATION)
                     :scrollStepSize(SCROLL_STEP_SIZE)
                     :scrollContainerContentWidth(UIKit.UI.P_FILL)
-                    :scrollContainerContentHeight(SCROLL_CONTENT_HEIGHT)
+                    :scrollContainerContentHeight(SCROLL_CONTENT_HEIGHT),
+
+                DialogFrame_UI.DialogGlyph(name .. ".DialogGlyph")
+                    :id("DialogGlyph", id)
+                    :anchor(UIKit.NewGroupCaptureString("ScrollContainer", id))
             })
 
         frame.QuestTitleContainer = UIKit.GetElementById("QuestTitleContainer", id)
         frame.ScrollContainer = UIKit.GetElementById("ScrollContainer", id)
+        frame.DialogGlyph = UIKit.GetElementById("DialogGlyph", id)
         frame.QuestText = UIKit.GetElementById("QuestText", id)
         frame.QuestObjectivesSpacer = UIKit.GetElementById("QuestObjectivesSpacer", id)
         frame.QuestObjectivesHeader = UIKit.GetElementById("QuestObjectivesHeader", id)
@@ -442,6 +459,13 @@ do -- Dialog Frame
                     :registerForDrag(true),
 
                 Frame(name .. ".ContentFrame", {
+                    Frame(name .. ".Shadow")
+                        :id("Shadow", id)
+                        :frameLevel(1)
+                        :background(DialogFrame_Preload.UIDEF.UIDialogFrameShadow)
+                        :size(UIKit.Define.Fill{ delta = -125 })
+                        :alpha(0.5),
+
                     Frame(name .. ".ContentFrame.Background")
                         :id("ContentFrame.Background", id)
                         :frameLevel(2)
@@ -450,13 +474,9 @@ do -- Dialog Frame
 
                     Frame{
                         Frame(name .. ".DetailsFrame", {
-                            Frame(name .. ".DialogGlyph")
+                            DialogFrame_UI.DialogGlyph(name .. ".DialogGlyph")
                                 :id("DialogGlyph", id)
-                                :point(UIKit.Enum.Point.Center)
-                                :background(DialogFrame_Preload.UIDEF.DialogGlyph)
-                                :backgroundColor(DialogFrame_Preload.TintColor)
-                                :size(125, 125)
-                                :alpha(0.25),
+                                :point(UIKit.Enum.Point.Center),
 
                             DialogFrame_UI.GossipFrame(name .. ".GossipFrame")
                                 :id("GossipFrame", id)

@@ -3,14 +3,13 @@ local Config = env.Config
 local CallbackRegistry = env.modules:Import("packages\\callback-registry")
 local SavedVariables = env.modules:Import("packages\\saved-variables")
 local UIAnim = env.modules:Import("packages\\ui-anim")
+local WoWClient = env.modules:Import("packages\\wow-client")
 local Tooltip = env.modules:Import("@\\Tooltip")
 local HideUI = env.modules:New("@\\HideUI")
 
-local function False() return false end
-
 local UIParent = UIParent
 local WorldFrame = WorldFrame
-local IsInteractingWithNpcOfType = (C_PlayerInteractionManager and C_PlayerInteractionManager.IsInteractingWithNpcOfType) or False
+local EventRegistry = EventRegistry
 local UIModeUtil = UIModeUtil
 local InCombatLockdown = InCombatLockdown
 
@@ -32,8 +31,9 @@ local UI_MODE_ROLESET_BLOCKLIST = {
     "encounterUI",
     "pvp"
 }
-local USE_UI_MODE = UIModeUtil and UIModeUtil.RegisterMode and UIModeUtil.SetModeActive
-if USE_UI_MODE then UIModeUtil.RegisterMode("Lorewalker.HideUI", { rolesetBlocklist = UI_MODE_ROLESET_BLOCKLIST }) end
+if WoWClient.IS_RETAIL then
+    UIModeUtil.RegisterMode("Lorewalker.HideUI", { rolesetBlocklist = UI_MODE_ROLESET_BLOCKLIST })
+end
 
 
 HideUI.Enabled = false
@@ -62,7 +62,7 @@ do
 end
 
 local function HideUIParent()
-    if USE_UI_MODE then
+    if WoWClient.IS_RETAIL then
         UIModeUtil.SetModeActive("Lorewalker.HideUI", true)
         UIParent:SetAlpha(0)
     else
@@ -76,15 +76,19 @@ local function ShowUIParent(applyAlpha)
         UIParent:SetAlpha(1)
     end
 
-    if USE_UI_MODE then
+    if WoWClient.IS_RETAIL then
         UIModeUtil.SetModeActive("Lorewalker.HideUI", false)
     else
         UIParent:Show()
     end
 end
 
-function HideUI.CanShow()
-    return not IsInteractingWithNpcOfType(57)
+local function OnUIParentHidden()
+    ShowUIParent()
+end
+
+if WoWClient.IS_RETAIL then
+    EventRegistry:RegisterCallback("UI.TopLevelParentHidden", OnUIParentHidden, HideUI)
 end
 
 function HideUI.FadeOut(instant)
@@ -105,8 +109,7 @@ function HideUI.FadeOut(instant)
 end
 
 function HideUI.FadeIn(instant)
-    if not HideUI.CanShow() then return end
-    if not USE_UI_MODE and UIParent:IsShown() and not HideUI.fadeOutPlayback then
+    if WoWClient.IS_CLASSIC_ALL and UIParent:IsShown() and not HideUI.fadeOutPlayback then
         instant = true
     end
 
@@ -124,6 +127,7 @@ end
 
 local isSessionActive = false
 local hideUIForSession = false
+local hideUIForCinematic = false
 
 function HideUI.OnSessionBegin()
     if isSessionActive then return end
@@ -145,6 +149,25 @@ function HideUI.OnSessionEnd()
 
     if hideUIForSession then
         hideUIForSession = false
+        if not hideUIForCinematic then
+            HideUI.FadeIn()
+        end
+    end
+end
+
+function HideUI.OnCinematicBegin()
+    if not hideUIForSession then return end
+
+    hideUIForCinematic = true
+    HideUI.FadeOut(true)
+    Tooltip.Restore()
+end
+
+function HideUI.OnCinematicEnd()
+    if not hideUIForCinematic then return end
+    hideUIForCinematic = false
+
+    if not isSessionActive then
         HideUI.FadeIn()
     end
 end
@@ -161,4 +184,6 @@ end
 
 CallbackRegistry.Add("ControlCenter.SessionBegin", HideUI.OnSessionBegin)
 CallbackRegistry.Add("ControlCenter.SessionEnd", HideUI.OnSessionEnd)
+CallbackRegistry.Add("ControlCenter.CinematicBegin", HideUI.OnCinematicBegin)
+CallbackRegistry.Add("ControlCenter.CinematicEnd", HideUI.OnCinematicEnd)
 CallbackRegistry.Add("ControlCenter.CombatBegin", HideUI.OnCombatBegin)

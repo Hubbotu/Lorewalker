@@ -1,11 +1,72 @@
 local env = select(2, ...)
+local Path = env.modules:Import("packages\\path")
 local GenericEnum = env.modules:Import("packages\\generic-enum")
+local Sound = env.modules:Import("packages\\sound")
 local UIFont = env.modules:Import("packages\\ui-font")
 local UIKit = env.modules:Import("packages\\ui-kit")
 local Frame, LayoutGrid, LayoutHorizontal, LayoutVertical, Text, ScrollContainer, LazyScrollContainer, ScrollBar, ScrollContainerEdge, Input, LinearSlider, HitRect, List, SecureButton, ModelScene = unpack(UIKit.UI.Frames)
+local UICSharedMixin = env.modules:Import("packages\\uic-sharedmixin")
 local Dialog_Preload = env.modules:Import("@\\Dialog\\Preload")
 local Dialog_UIWidgets = env.modules:Import("@\\Dialog\\UIWidgets")
+local Immersive_UI = env.modules:New("@\\@\\Dialog\\Modes\\Immersive\\UI")
 
+
+do -- Replay Button
+    local ATLAS = UIKit.Define.Texture_Atlas{ path = Path.Root .. "\\Art\\Dialog\\Shared\\ReplayButton", inset = 0, scale = 1 }
+    local UIDEF = {
+        UIReplayButton        = ATLAS{ left = 0 / 64, right = 32 / 64, top = 0 / 32, bottom = 32 / 32 },
+        UIReplayButton_Pushed = ATLAS{ left = 32 / 64, right = 64 / 64, top = 0 / 32, bottom = 32 / 32 }
+    }
+    local ICON_Y = 0
+    local ICON_Y_PUSHED = -1
+
+    local ReplayButtonMixin = CreateFromMixins(UICSharedMixin.ButtonMixin)
+
+    function ReplayButtonMixin:UpdateAnimation()
+        local buttonState = self:GetButtonState()
+
+        self.Icon:ClearAllPoints()
+        if buttonState == "PUSHED" then
+            self.Icon:background(UIDEF.UIReplayButton_Pushed)
+            self.Icon:SetPoint("CENTER", self, 0, ICON_Y_PUSHED)
+        else
+            self.Icon:background(UIDEF.UIReplayButton)
+            self.Icon:SetPoint("CENTER", self, 0, ICON_Y)
+        end
+    end
+
+    function ReplayButtonMixin:OnLoad()
+        self:InitButton()
+
+        self:RegisterMouseEvents()
+        self:HookButtonStateChange(self.UpdateAnimation)
+        self:HookEnableChange(self.UpdateAnimation)
+        self:HookMouseUp(self.PlayInteractSound)
+        self:UpdateAnimation()
+    end
+
+    function ReplayButtonMixin:PlayInteractSound()
+        Sound.PlaySound("UI", SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+    end
+
+    Immersive_UI.ReplayButton = UIKit.Template(function(id, name, children, ...)
+        local frame =
+            Frame(name, {
+                Frame(name .. ".Icon")
+                    :id("Icon", id)
+                    :background(UIDEF.UIReplayButton)
+                    :point(UIKit.Enum.Point.Center)
+                    :size(UIKit.UI.P_FILL, UIKit.UI.P_FILL)
+            })
+
+        Mixin(frame, ReplayButtonMixin)
+
+        frame.Icon = UIKit.GetElementById("Icon", id)
+        frame:OnLoad()
+
+        return frame
+    end)
+end
 
 do -- Chat Bubble
     local CONTENT_INSET = 8
@@ -20,6 +81,25 @@ do -- Chat Bubble
     local id = "LWImmersiveChatBubble"
 
     local frame = Frame(name, {
+            Frame(name .. ".ReplayFrame", {
+                Frame(name .. ".BackgroundFrame")
+                    :id("ReplayFrame.BackgroundFrame", id)
+                    :point(UIKit.Enum.Point.Center)
+                    :size(48, 48)
+                    :frameLevel(1)
+                    :background(Dialog_Preload.UIDEF.IMChatBubbleShadow),
+
+                Immersive_UI.ReplayButton(name .. ".ReplayButton")
+                    :id("ReplayFrame.ReplayButton", id)
+                    :point(UIKit.Enum.Point.Center)
+                    :size(22, 22)
+                    :frameLevel(2)
+            })
+                :id("ReplayFrame", id)
+                :point(UIKit.Enum.Point.Center)
+                :size(48, 48)
+                :frameLevel(1),
+
             Frame(name .. ".ContainerFrame", {
                 Frame(name .. ".ContentFrame", {
                     Frame(name .. ".StringFrame", {
@@ -96,8 +176,12 @@ do -- Chat Bubble
         :background(Dialog_Preload.UIDEF.IMChatBubbleShadow)
         :_Render()
 
+    frame.ReplayFrame = UIKit.GetElementById("ReplayFrame", id)
+    frame.ReplayFrame.BackgroundFrame = UIKit.GetElementById("ReplayFrame.BackgroundFrame", id)
+    frame.ReplayFrame.ReplayButton = UIKit.GetElementById("ReplayFrame.ReplayButton", id)
     frame.DialogBackground = UIKit.GetElementById("DialogBackground", id)
     frame.ObjectBackground = UIKit.GetElementById("ObjectBackground", id)
+    frame.ContainerFrame = UIKit.GetElementById("ContainerFrame", id)
     frame.ContentFrame = UIKit.GetElementById("ContentFrame", id)
     frame.StringFrame = UIKit.GetElementById("StringFrame", id)
     frame.String = UIKit.GetElementById("String", id)

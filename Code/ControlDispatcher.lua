@@ -10,8 +10,6 @@ local Modes_ModeHandler = env.modules:Import("@\\Dialog\\Modes\\ModeHandler")
 local ControlDispatcher = env.modules:New("@\\ControlDispatcher")
 
 
-ControlDispatcher.isProcessingEnabled = true
-
 local REPEAT_INITIAL_DELAY = 0.375
 local REPEAT_INTERVAL = 0.125
 local driverFrame = CreateFrame("Frame")
@@ -196,7 +194,7 @@ local function IsDialogFrameShown()
 end
 
 local function CanProcessKeyInput()
-    return ControlDispatcher.isProcessingEnabled and (IsImmersiveModeActive() or IsDialogFrameShown())
+    return IsImmersiveModeActive() or IsDialogFrameShown()
 end
 
 local function GetActionForKey(key, actions)
@@ -224,19 +222,8 @@ local function HandleActionForKey(key)
 end
 
 
-function ControlDispatcher.EnableProcessing()
-    ControlDispatcher.isProcessingEnabled = true
-end
-
-function ControlDispatcher.DisableProcessing()
-    ControlDispatcher.isProcessingEnabled = false
-    ControlDispatcher.StopRepeatingAction()
-    ControlDispatcher.ReleasePushedDialogOption()
-end
-
-
 function ControlDispatcher.RepeatAction_OnUpdate(_, elapsed)
-    if not ControlDispatcher.isProcessingEnabled or not ControlDispatcher.repeatAction or not ControlDispatcher.repeatActionIsActive() then
+    if not ControlDispatcher.repeatAction or not ControlDispatcher.repeatActionIsActive() then
         ControlDispatcher.StopRepeatingAction()
         return
     end
@@ -324,18 +311,6 @@ function ControlDispatcher.OnKeyUp(key)
     end
 end
 
-function ControlDispatcher.OnEvent(_, event)
-    if event == "PLAYER_REGEN_ENABLED" then
-        ControlDispatcher:EnableProcessing()
-    elseif event == "PLAYER_REGEN_DISABLED" then
-        ControlDispatcher:DisableProcessing()
-    end
-end
-
-
-driverFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
-driverFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-driverFrame:SetScript("OnEvent", ControlDispatcher.OnEvent)
 CallbackRegistry.Add("WoWClient.OnKeyDown", function(_, key) ControlDispatcher.OnKeyDown(key) end)
 CallbackRegistry.Add("WoWClient.OnKeyUp", function(_, key) ControlDispatcher.OnKeyUp(key) end)
 CallbackRegistry.Add("ControlCenter.ModeChanged", ControlDispatcher.StopRepeatingAction)

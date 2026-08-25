@@ -140,6 +140,26 @@ do -- Schema
                         return Modes_ModeHandler.GetMode()
                     end,
                     key                      = "ActiveMode"
+                },
+                {
+                    widgetName = L["CONFIG_DIALOGUE_FRAME"],
+                    widgetType = Settings_Enum.WidgetType.Container,
+                    children   = {
+                        {
+                            widgetName               = L["CONFIG_DIALOGUE_THEME"],
+                            widgetType               = Settings_Enum.WidgetType.SelectionMenu,
+                            widgetSelectionMenu_data = {
+                                L["CONFIG_DIALOGUE_THEME_LIGHT"],
+                                L["CONFIG_DIALOGUE_THEME_DARK"]
+                            },
+                            key                      = "Theme"
+                        },
+                        {
+                            widgetName = L["CONFIG_DIALOGUE_RIGHTCLICKTOCLOSE"],
+                            widgetType = Settings_Enum.WidgetType.CheckButton,
+                            key        = "RightClickToClose"
+                        }
+                    }
                 }
             }
         },
