@@ -65,7 +65,7 @@ local function HandleConfirmAction()
 end
 
 local function HandleCloseAction()
-    if Config.DBGlobal:GetVariable("EscapeDeclinesQuest") == false then
+    if Config.DBGlobal:GetVariable("CloseToPreviousPage") == false then
         DialogFrame.RequestCloseSession()
         WoWClient.BlockKeyEvent()
         return true

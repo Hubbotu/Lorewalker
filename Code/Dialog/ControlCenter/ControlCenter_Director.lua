@@ -114,7 +114,7 @@ local function TryAutoSelectFirstGossipOption()
         return false
     end
 
-    SelectOptionByIndex(0)
+    SelectOptionByIndex(GetGossipOptions()[1].orderIndex)
     return true
 end
 

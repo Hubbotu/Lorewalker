@@ -9,8 +9,8 @@ local Path = env.modules:Import("packages\\path")
 env.NAME = "Lorewalker"
 env.ICON = Path.Root .. "\\Art\\Icons\\Logo"
 env.ICON_ALT = Path.Root .. "\\Art\\Icons\\Logo-White"
-env.VERSION_STRING = "Beta 2"
-env.VERSION_NUMBER = 000002
+env.VERSION_STRING = "Beta 3"
+env.VERSION_NUMBER = 000003
 env.DEBUG_MODE = false
 
 
@@ -86,7 +86,7 @@ do
         CameraEffects_FocusInteractTargetYawStrength       = nil,
 
         ForceGossip                           = false,
-        EscapeDeclinesQuest                   = false,
+        CloseToPreviousPage                   = false,
         RightClickToClose                     = true,
         Immersive_SplitParagraphs             = true,
         Immersive_Playback                    = false,

@@ -158,6 +158,17 @@ do -- Schema
                             widgetName = L["CONFIG_DIALOGUE_RIGHTCLICKTOCLOSE"],
                             widgetType = Settings_Enum.WidgetType.CheckButton,
                             key        = "RightClickToClose"
+                        },
+                        {
+                            widgetName = L["CONFIG_DIALOGUE_FORCEGOSSIP"],
+                            widgetType = Settings_Enum.WidgetType.CheckButton,
+                            key        = "ForceGossip"
+                        },
+                        {
+                            widgetName        = L["CONFIG_DIALOGUE_CLOSETOPREVIOUSPAGE"],
+                            widgetDescription = Settings_Define.Descriptor{ description = L["CONFIG_DIALOGUE_CLOSETOPREVIOUSPAGE_DESCRIPTION"] },
+                            widgetType        = Settings_Enum.WidgetType.CheckButton,
+                            key               = "CloseToPreviousPage"
                         }
                     }
                 }
